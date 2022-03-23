@@ -20,9 +20,12 @@ namespace TodoApp.EF.Configuration
             builder.HasKey(todo => todo.Id);
             builder.Property(todo => todo.Id).ValueGeneratedOnAdd();
 
-            builder.Property(todo => todo.Title).HasMaxLength(100);
+            builder.Property(todo => todo.Title).HasMaxLength(100).IsRequired(true);
 
             builder.HasIndex(todo => todo.Finished).HasName("IX_My_Finished");
+
+            builder.HasOne(todo => todo.Detail).WithOne(todoDetail => todoDetail.Todo).HasForeignKey<TodoDetail>(todoDetail => todoDetail.TodoId);
+            builder.HasMany(todo => todo.Comments).WithOne(todoComment => todoComment.Todo).HasForeignKey(todoComment => todoComment.TodoId);
         }
     }
 }

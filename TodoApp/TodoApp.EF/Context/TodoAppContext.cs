@@ -8,11 +8,15 @@ namespace TodoApp.EF.Context;
 public class TodoAppContext : DbContext
 {
     public DbSet<Todo> Todos { get; set; }
+    public DbSet<TodoDetail> TodoDetails { get; set; }
+    public DbSet<TodoComment> TodoComments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfiguration(new TodoConfiguration());
+        modelBuilder.ApplyConfiguration(new TodoCommentConfiguration());
+        modelBuilder.ApplyConfiguration(new TodoDetailConfiguration());
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
