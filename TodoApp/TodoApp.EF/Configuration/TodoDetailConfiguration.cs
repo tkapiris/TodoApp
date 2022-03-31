@@ -18,6 +18,6 @@ public class TodoDetailConfiguration : IEntityTypeConfiguration<TodoDetail>
         builder.Property(todoDetail => todoDetail.CreateDate).IsRequired();
 
         builder.HasOne(todoDetail => todoDetail.Todo).WithOne(todo => todo.Detail)
-            .HasForeignKey<TodoDetail>(todoDetail => todoDetail.TodoId).IsRequired();
+            .HasForeignKey<TodoDetail>(todoDetail => todoDetail.TodoId).OnDelete(DeleteBehavior.Restrict).IsRequired();
     }
 }
