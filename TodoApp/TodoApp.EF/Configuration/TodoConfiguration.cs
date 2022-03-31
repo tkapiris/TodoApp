@@ -1,31 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using TodoApp.Model;
 
-namespace TodoApp.EF.Configuration
+namespace TodoApp.EF.Configuration;
+
+internal class TodoConfiguration : IEntityTypeConfiguration<Todo>
 {
-    public class TodoConfiguration : IEntityTypeConfiguration<Todo>
+    /// <inheritdoc />
+    public void Configure(EntityTypeBuilder<Todo> builder)
     {
-        public void Configure(EntityTypeBuilder<Todo> builder)
-        {
-            builder.ToTable("Todo");
+        builder.ToTable("Todo", "App");
 
-            builder.HasKey(todo => todo.Id);
-            builder.Property(todo => todo.Id).ValueGeneratedOnAdd();
+        builder.HasKey(todo => todo.Id);
+        builder.Property(todo => todo.Id).ValueGeneratedOnAdd();
 
-            builder.Property(todo => todo.Title).HasMaxLength(100).IsRequired(true);
+        builder.Property(todo => todo.Title).HasMaxLength(maxLength: 200);
 
-            builder.HasIndex(todo => todo.Finished).HasName("IX_My_Finished");
-
-            builder.HasOne(todo => todo.Detail).WithOne(todoDetail => todoDetail.Todo).HasForeignKey<TodoDetail>(todoDetail => todoDetail.TodoId);
-            builder.HasMany(todo => todo.Comments).WithOne(todoComment => todoComment.Todo).HasForeignKey(todoComment => todoComment.TodoId);
-        }
+        builder.HasIndex(todo => todo.Finished);
     }
 }

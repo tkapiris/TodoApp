@@ -1,29 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using TodoApp.Model;
 
-namespace TodoApp.EF.Configuration
+namespace TodoApp.EF.Configuration;
+
+public class TodoDetailConfiguration : IEntityTypeConfiguration<TodoDetail>
 {
-    public class TodoDetailConfiguration : IEntityTypeConfiguration<TodoDetail>
+    /// <inheritdoc />
+    public void Configure(EntityTypeBuilder<TodoDetail> builder)
     {
-        public void Configure(EntityTypeBuilder<TodoDetail> builder)
-        {
-            builder.ToTable("TodoDetail");
+        builder.ToTable("TodoDetail", "App");
 
-            builder.HasKey(todoDetail => todoDetail.Id);
-            builder.Property(todoDetail => todoDetail.Id).ValueGeneratedOnAdd();
+        builder.HasKey(todoDetail => todoDetail.Id);
+        builder.Property(todoDetail => todoDetail.Id).ValueGeneratedOnAdd();
 
-            builder.Property(todoDetail => todoDetail.CreateDate).IsRequired(true);
-            builder.Property(todoDetail => todoDetail.FinishDate).IsRequired(false);
+        builder.Property(todoDetail => todoDetail.CreateDate).IsRequired();
 
-            builder.HasOne(todoDetail => todoDetail.Todo).WithOne(todo => todo.Detail).HasForeignKey<TodoDetail>(todoDetail => todoDetail.TodoId);
-        }
+        builder.HasOne(todoDetail => todoDetail.Todo).WithOne(todo => todo.Detail)
+            .HasForeignKey<TodoDetail>(todoDetail => todoDetail.TodoId).IsRequired();
     }
 }

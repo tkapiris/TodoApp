@@ -1,31 +1,42 @@
 using Microsoft.Extensions.DependencyInjection;
 
-using TodoApp.EF.Repositories;
+using TodoApp.EF.Repository;
 using TodoApp.Model;
 
-namespace TodoApp.Win
+namespace TodoApp.Win;
+
+internal static class Program
 {
-    internal static class Program
+    /// <summary>
+    ///     The main entry point for the application.
+    /// </summary>
+    [STAThread]
+    private static void Main()
     {
-        public static IServiceProvider ServiceProvider { get; private set; }
+        // To customize application configuration such as set high DPI settings or default font,
+        // see https://aka.ms/applicationconfiguration.
+        ApplicationConfiguration.Initialize();
+        //Application.Run(new Form1());
 
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main()
-        {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
+        var services = new ServiceCollection();
 
-            var services = new ServiceCollection();
-            services.AddSingleton<IEntityRepo<Todo>, TodoRepo>();
-            services.AddSingleton<MainForm>();
+        ConfigureServices(services);
 
-            ServiceProvider = services.BuildServiceProvider();
-            var mainForm = ServiceProvider.GetRequiredService<MainForm>();
-            Application.Run(mainForm);
-        }
+        using var serviceProvider = services.BuildServiceProvider();
+        var mainForm = serviceProvider.GetRequiredService<Main>();
+        Application.Run(mainForm);
+    }
+
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        // Actual Service
+        //services.AddSingleton<IEntityRepo<Todo>, TodoRepo>()
+        //    .AddSingleton<IEntityRepo<TodoComment>, TodoCommentRepo>()
+        //    .AddSingleton<Main>();
+
+        // Mock Service
+        services.AddSingleton<IEntityRepo<Todo>, MockTodoRepo>()
+            .AddSingleton<IEntityRepo<TodoComment>, MockTodoCommentRepo>()
+            .AddSingleton<Main>();
     }
 }

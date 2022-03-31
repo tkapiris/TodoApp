@@ -7,16 +7,16 @@ public class Todo : BaseEntity
     public Todo(string title)
     {
         Title = title;
+        Comments = new List<TodoComment>();
         Detail = new TodoDetail();
     }
 
-    [Required]
-    [MaxLength(200)]
-    public string Title { get; set; }
+    [Required] public string Title { get; set; }
 
     public bool Finished { get; set; }
 
+    // Relations
     public TodoDetail Detail { get; set; }
 
-    public List<TodoComment> Comments { get; set; }
+    public ICollection<TodoComment> Comments { get; set; }
 }

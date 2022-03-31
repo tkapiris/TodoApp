@@ -1,63 +1,126 @@
-using System.Windows.Forms;
-
-using TodoApp.EF.Repositories;
+﻿using TodoApp.EF.Repository;
 using TodoApp.Model;
 
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+namespace TodoApp.Win;
 
-namespace TodoApp.Win
+public partial class Main : Form
 {
-    public partial class MainForm : Form
+    private readonly IEntityRepo<TodoComment> _todoCommentsRepo;
+    private readonly IEntityRepo<Todo> _todoRepo;
+
+    private int? _selectedTodoId;
+
+    public Main(IEntityRepo<Todo> todoRepo, IEntityRepo<TodoComment> todoCommentsRepo)
     {
-        private readonly IEntityRepo<Todo> _todoRepo;
+        InitializeComponent();
+        _todoRepo = todoRepo;
+        _todoCommentsRepo = todoCommentsRepo;
+    }
 
-        private List<Todo> _todos = new List<Todo>();
+    private void Main_Load(object sender, EventArgs e)
+    {
+        StartLb.Visible = false;
+        StartDt.Visible = false;
 
-        public MainForm(IEntityRepo<Todo> todoRepo)
+        FinishLb.Visible = false;
+        FinishDt.Visible = false;
+
+        RefreshTodos();
+        // ValidateSelection(_selectedTodoId);
+    }
+
+    private void TodoGV_SelectionChanged(object sender, EventArgs e)
+    {
+        if (TodoGV.SelectedRows.Count != 1)
+            return;
+
+        _selectedTodoId = (int)TodoGV.SelectedRows[index: 0].Cells[index: 4].Value;
+        var finished = (bool)TodoGV.SelectedRows[index: 0].Cells[index: 1].Value;
+        ValidateSelection(_selectedTodoId, finished);
+        RefreshTodoDetails(_selectedTodoId);
+    }
+
+    private void AddBtn_Click(object sender, EventArgs e)
+    {
+        var todoTitle = TitleTxt.Text;
+        if (string.IsNullOrEmpty(todoTitle))
+            return;
+
+        var newTodo = new Todo(todoTitle);
+        _todoRepo.Add(newTodo);
+        RefreshTodos();
+    }
+
+    private void FinishBtn_Click(object sender, EventArgs e)
+    {
+        if (_selectedTodoId is null)
+            return;
+
+        var selectedTodo = _todoRepo.GetById(_selectedTodoId.Value);
+        if (selectedTodo is null)
+            return;
+
+        selectedTodo.Finished = true;
+        selectedTodo.Detail.FinishDate = DateTime.Now;
+        _todoRepo.Update(_selectedTodoId.Value, selectedTodo);
+        RefreshTodos();
+        ValidateSelection(_selectedTodoId, selectedTodo.Finished);
+    }
+
+    private void ValidateSelection(int? todoId, bool finished = false)
+    {
+        FinishBtn.Enabled = todoId is not null && !finished;
+    }
+
+    private void RefreshTodos()
+    {
+        TodoGV.DataSource = null;
+        TodoGV.DataSource = _todoRepo.GetAll();
+        TodoGV.Update();
+        TodoGV.Refresh();
+        TodoGV.Columns[index: 0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        TodoGV.Columns[index: 2].Visible = false;
+        TodoGV.Columns[index: 3].Visible = false;
+        TodoGV.Columns[index: 4].Visible = false;
+    }
+
+    private void RefreshTodoDetails(int? todoId)
+    {
+        if (todoId is null)
+            return;
+
+        var todoDetail = (TodoDetail)TodoGV.SelectedRows[index: 0].Cells[index: 2].Value;
+        if (todoDetail is not null)
         {
-            InitializeComponent();
-            _todoRepo = todoRepo;
-        }
-
-        private void Main_Load(object sender, EventArgs e)
-        {
-            RefreshTodos();
-        }
-
-        private void RefreshTodos()
-        {
-            _todos = _todoRepo.GetAll();
-            dataGridView1.DataSource = null;
-            dataGridView1.DataSource = _todos;
-            dataGridView1.Refresh();
-            dataGridView1.Update();
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            var todoTile = textBox1.Text;
-            if (string.IsNullOrEmpty(todoTile))
-                return;
-            var todo = new Todo(todoTile);
-            _todoRepo.Create(todo);
-            textBox1.Text = String.Empty;
-            RefreshTodos();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            if (dataGridView1.SelectedRows.Count > 0)
+            StartLb.Visible = true;
+            StartDt.Visible = true;
+            StartDt.Value = todoDetail.CreateDate;
+            if (todoDetail.FinishDate.HasValue)
             {
-                var selectedRow = dataGridView1.SelectedRows[0];
-                var selectedTodo = selectedRow.DataBoundItem as Todo;
-                if (selectedTodo is not null)
-                {
-                    selectedTodo.Finished = true;
-                    _todoRepo.Update(selectedTodo.Id, selectedTodo);
-                    RefreshTodos();
-                }
+                FinishLb.Visible = true;
+                FinishDt.Visible = true;
+                FinishDt.Value = todoDetail.FinishDate.Value;
             }
-
+            else
+            {
+                FinishLb.Visible = false;
+                FinishDt.Visible = false;
+            }
         }
+        else
+        {
+            StartLb.Visible = false;
+            StartDt.Visible = false;
+        }
+
+        if (_todoCommentsRepo is not ITodoCommentRepo castedCommentsRepo) return;
+        TodoCommentsGv.DataSource = null;
+        TodoCommentsGv.DataSource = castedCommentsRepo.GetAllForTodo(todoId.Value);
+        TodoCommentsGv.Update();
+        TodoCommentsGv.Refresh();
+        TodoCommentsGv.Columns[index: 0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        TodoCommentsGv.Columns[index: 1].Visible = false;
+        TodoCommentsGv.Columns[index: 2].Visible = false;
+        TodoCommentsGv.Columns[index: 3].Visible = false;
     }
 }
