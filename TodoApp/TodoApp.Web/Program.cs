@@ -1,4 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
+
 using TodoApp.EF.Context;
+using TodoApp.EF.Repository;
+using TodoApp.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +10,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<TodoContext>();
+var useMocks = Boolean.Parse(builder.Configuration["UseMocks"]);
+if (!useMocks)
+{
+    builder.Services.AddScoped<IEntityRepo<Todo>, TodoRepo>();
+}
+else
+{
+    builder.Services.AddSingleton<IEntityRepo<Todo>, MockTodoRepo>();
+}
+
 
 var app = builder.Build();
 

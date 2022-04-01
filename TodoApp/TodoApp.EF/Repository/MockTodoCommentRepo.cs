@@ -64,4 +64,29 @@ public class MockTodoCommentRepo : IEntityRepo<TodoComment>, ITodoCommentRepo
     {
         return _todoComments.Where(todoComment => todoComment.TodoId == todoId).ToList();
     }
+
+    public Task<IEnumerable<TodoComment>> GetAllAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<TodoComment?> GetByIdAsync(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task AddAsync(TodoComment entity)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateAsync(int id, TodoComment entity)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task DeleteAsync(int id)
+    {
+        throw new NotImplementedException();
+    }
 }

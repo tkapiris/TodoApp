@@ -9,7 +9,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 using TodoApp.EF.Context;
+using TodoApp.EF.Repository;
 using TodoApp.Model;
+using TodoApp.Web.Models;
 
 namespace TodoApp.Web.Controllers
 {
@@ -17,18 +19,21 @@ namespace TodoApp.Web.Controllers
     {
         private readonly TodoContext _context;
 
-        public TodoController(TodoContext context)
+        private readonly IEntityRepo<Todo> _todoRepo;
+
+        public TodoController(IEntityRepo<Todo> todoRepo)
         {
-            _context = context;
+            _todoRepo = todoRepo;
         }
 
         // GET: Todo
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Todos.ToListAsync());
+            return View(await _todoRepo.GetAllAsync());
         }
 
         // GET: Todo/Details/5
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -36,14 +41,29 @@ namespace TodoApp.Web.Controllers
                 return NotFound();
             }
 
-            var todo = await _context.Todos
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var todo = await _todoRepo.GetByIdAsync(id.Value);
             if (todo == null)
             {
                 return NotFound();
             }
 
-            return View(todo);
+            var viewModel = new TodoDetailViewModel
+            {
+                Title = todo.Title,
+                Finished = todo.Finished,
+                FinshDate = todo.Detail.FinishDate
+            };
+
+            foreach (var comment in todo.Comments)
+            {
+                var commentViewModel = new TodoCommentListViewModel
+                {
+                    Text = comment.Text
+                };
+                viewModel.Comments.Add(commentViewModel);
+            }
+
+            return View(viewModel);
         }
 
         // GET: Todo/Create
@@ -57,15 +77,16 @@ namespace TodoApp.Web.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Id")] Todo todo)
+        public async Task<IActionResult> Create([Bind("Title")] TodoCreateViewModel todoViewModel)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(todo);
-                await _context.SaveChangesAsync();
+                var newTodo = new Todo(todoViewModel.Title);
+
+                await _todoRepo.AddAsync(newTodo);
                 return RedirectToAction(nameof(Index));
             }
-            return View(todo);
+            return View(todoViewModel);
         }
 
         // GET: Todo/Edit/5
@@ -76,12 +97,17 @@ namespace TodoApp.Web.Controllers
                 return NotFound();
             }
 
-            var todo = await _context.Todos.FindAsync(id);
+            var todo = await _todoRepo.GetByIdAsync(id.Value);
             if (todo == null)
             {
                 return NotFound();
             }
-            return View(todo);
+            var todoViewModel = new TodoUpdateViewModel
+            {
+                Id = todo.Id,
+                Title = todo.Title
+            };
+            return View(todoViewModel);
         }
 
         // POST: Todo/Edit/5
@@ -89,7 +115,7 @@ namespace TodoApp.Web.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Title,Finished,Id")] Todo todo)
+        public async Task<IActionResult> Edit(int id, [Bind("Title", "Id")] TodoUpdateViewModel todo)
         {
             if (id != todo.Id)
             {
@@ -98,25 +124,31 @@ namespace TodoApp.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(todo);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TodoExists(todo.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                var currentTodo = await _todoRepo.GetByIdAsync(id);
+                if (currentTodo is null)
+                    return BadRequest("Could not find todo");
+                currentTodo.Title = todo.Title;
+                await _todoRepo.UpdateAsync(id, currentTodo);
                 return RedirectToAction(nameof(Index));
             }
             return View(todo);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Finish(int id)
+        {
+            var currentTodo = await _todoRepo.GetByIdAsync(id);
+            if (currentTodo is null)
+                return BadRequest("Could not find todo");
+            if (!currentTodo.Finished)
+            {
+                currentTodo.Finished = true;
+                currentTodo.Detail.FinishDate = DateTime.Now;
+
+                await _todoRepo.UpdateAsync(id, currentTodo);
+            }
+
+            return Ok();
         }
 
         // GET: Todo/Delete/5
@@ -127,14 +159,19 @@ namespace TodoApp.Web.Controllers
                 return NotFound();
             }
 
-            var todo = await _context.Todos
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var todo = await _todoRepo.GetByIdAsync(id.Value);
             if (todo == null)
             {
                 return NotFound();
             }
 
-            return View(todo);
+            var viewModel = new TodoDeleteViewModel
+            {
+                Title = todo.Title,
+                Id = todo.Id,
+                Finished = todo.Finished
+            };
+            return View(viewModel);
         }
 
         // POST: Todo/Delete/5
@@ -142,15 +179,8 @@ namespace TodoApp.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var todo = await _context.Todos.FindAsync(id);
-            _context.Todos.Remove(todo);
-            await _context.SaveChangesAsync();
+            await _todoRepo.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool TodoExists(int id)
-        {
-            return _context.Todos.Any(e => e.Id == id);
         }
     }
 }
