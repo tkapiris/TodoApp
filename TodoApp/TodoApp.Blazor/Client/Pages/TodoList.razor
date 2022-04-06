@@ -1,10 +1,10 @@
 ﻿@page "/todolist"
 @inject HttpClient httpClient
 @inject IJSRuntime jsRuntime
+@inject NavigationManager navigationManager
 
 <h3>TodoList - Pending @todoList.Count(x=> !x.Finished) </h3>
 
-<input @bind=NewItemText placeholder="New item ..." />
 <button class="btn btn-primary" @onclick="AddItem" >Add</button>
 
 @if (isLoading)
@@ -25,10 +25,13 @@ else{
             @foreach(var todo in todoList)
             {
                 <tr>
-                    <td><input value="@todo.Title" @onchange="(e)=> TitleChanged(e, todo)"/></td>
-                    <td><input type="checkbox" checked="@todo.Finished" @onchange="(e) => FinishedChanged(todo)" /></td>
+                    <td>@todo.Title</td>
+                    <td><input type="checkbox" checked="@todo.Finished" disabled /></td>
                     <td>@todo.FinishedDate</td>
-                    <td><button class="btn btn-danger" @onclick="() => DeleteItem(todo)">Delete</button></td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditItem(todo)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteItem(todo)">Delete</button>
+                    </td>
                 </tr>
             }
         </tbody>

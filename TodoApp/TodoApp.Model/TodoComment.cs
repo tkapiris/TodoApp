@@ -14,4 +14,7 @@ public class TodoComment : BaseEntity
     // Relations
     public int TodoId { get; set; }
     public Todo Todo { get; set; } = null!;
+
+    public int CommenterId { get; set; }
+    public Commenter Commenter { get; set; }
 }

@@ -14,6 +14,7 @@ var useMocks = Boolean.Parse(builder.Configuration["UseMocks"]);
 if (!useMocks)
 {
     builder.Services.AddScoped<IEntityRepo<Todo>, TodoRepo>();
+    builder.Services.AddScoped<IEntityRepo<Commenter>, CommenterRepo>();
 }
 else
 {

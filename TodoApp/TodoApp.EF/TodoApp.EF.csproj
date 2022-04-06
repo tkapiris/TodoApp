@@ -10,6 +10,7 @@
 	<ItemGroup>
 		<Compile Remove="Configuration\**" />
 		<EmbeddedResource Remove="Configuration\**" />
+		<Compile Include="Configuration\CommenterConfiguration.cs" />
 		<Compile Include="Configuration\TodoCommentConfiguration.cs" />
 		<Compile Include="Configuration\TodoConfiguration.cs" />
 		<Compile Include="Configuration\TodoDetailConfiguration.cs" />

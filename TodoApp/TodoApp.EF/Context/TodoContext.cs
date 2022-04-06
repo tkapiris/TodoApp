@@ -18,6 +18,7 @@ public class TodoContext : DbContext
     public DbSet<Todo> Todos { get; set; } = null!;
     public DbSet<TodoDetail> TodoDetails { get; set; } = null!;
     public DbSet<TodoComment> TodoComments { get; set; } = null!;
+    public DbSet<Commenter> Commenters { get; set; } = null!;
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,6 +26,7 @@ public class TodoContext : DbContext
         modelBuilder.ApplyConfiguration(new TodoConfiguration());
         modelBuilder.ApplyConfiguration(new TodoDetailConfiguration());
         modelBuilder.ApplyConfiguration(new TodoCommentConfiguration());
+        modelBuilder.ApplyConfiguration(new CommenterConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 

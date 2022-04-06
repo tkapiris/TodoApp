@@ -18,26 +18,26 @@ public class TodoRepo : IEntityRepo<Todo>
     public IEnumerable<Todo> GetAll()
     {
         // using var context = new TodoContext();
-        return context.Todos.Include(todo => todo.Detail).ToList();
+        return context.Todos.AsNoTracking().Include(todo => todo.Detail).ToList();
     }
 
     public async Task<IEnumerable<Todo>> GetAllAsync()
     {
         // await using var context = new TodoContext();
-        return await context.Todos.Include(todo => todo.Detail).ToListAsync();
+        return await context.Todos.AsNoTracking().Include(todo => todo.Detail).ToListAsync();
     }
 
     /// <inheritdoc />
     public Todo? GetById(int id)
     {
         // using var context = new TodoContext();
-        return context.Todos.Include(todo => todo.Detail).SingleOrDefault(todo => todo.Id == id);
+        return context.Todos.AsNoTracking().Include(todo => todo.Detail).Include(todo => todo.Comments).SingleOrDefault(todo => todo.Id == id);
     }
 
     public async Task<Todo?> GetByIdAsync(int id)
     {
         // await using var context = new TodoContext();
-        return await context.Todos.Include(todo => todo.Detail).SingleOrDefaultAsync(todo => todo.Id == id);
+        return await context.Todos.AsNoTracking().Include(todo => todo.Detail).Include(todo=> todo.Comments).SingleOrDefaultAsync(todo => todo.Id == id);
     }
 
     /// <inheritdoc />
@@ -96,12 +96,14 @@ public class TodoRepo : IEntityRepo<Todo>
 
     private void UpdateLogic(int id, Todo entity, TodoContext context)
     {
-        var dbTodo = context.Todos.Include(todo => todo.Detail).SingleOrDefault(todo => todo.Id == id);
+        var dbTodo = context.Todos.Include(todo => todo.Detail).Include(todo=> todo.Comments)
+                                  .SingleOrDefault(todo => todo.Id == id);
         if (dbTodo is null)
             throw new KeyNotFoundException($"Given id '{id}' was not found in database");
 
         dbTodo.Title = entity.Title;
         dbTodo.Finished = entity.Finished;
+        dbTodo.Comments = entity.Comments;
 
         if (entity.Finished) entity.Detail.FinishDate = DateTime.Now;
     }

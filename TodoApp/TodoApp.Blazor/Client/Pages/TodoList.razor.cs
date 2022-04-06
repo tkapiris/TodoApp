@@ -6,7 +6,6 @@ namespace TodoApp.Blazor.Client.Pages
 {
     public partial class TodoList
     {
-        private string NewItemText { get; set; }
         List<TodoListViewModel> todoList = new();
         bool isLoading = true;
 
@@ -23,15 +22,12 @@ namespace TodoApp.Blazor.Client.Pages
 
         async Task AddItem()
         {
-            if (string.IsNullOrWhiteSpace(NewItemText)) return;
-            var newTodo = new TodoListViewModel
-            {
-                Title = NewItemText
-            };
-            NewItemText = null;
+            navigationManager.NavigateTo("/todolist/edit");
+        }
 
-            await httpClient.PostAsJsonAsync("todo", newTodo);
-            await LoadItemsFromServer();
+        async Task EditItem(TodoListViewModel itemToEdit)
+        {
+            navigationManager.NavigateTo($"/todolist/edit/{itemToEdit.Id}");
         }
 
         async Task DeleteItem(TodoListViewModel itemToDelete)
@@ -43,22 +39,6 @@ namespace TodoApp.Blazor.Client.Pages
                 response.EnsureSuccessStatusCode();
                 await LoadItemsFromServer();
             }
-        }
-
-        async Task TitleChanged(ChangeEventArgs e, TodoListViewModel item)
-        {
-            item.Title = e.Value?.ToString();
-            var response = await httpClient.PutAsJsonAsync("todo", item);
-            response.EnsureSuccessStatusCode();
-            //await LoadItemsFromServer();
-        }
-
-        async Task FinishedChanged(TodoListViewModel item)
-        {
-            item.Finished = !item.Finished;
-            var response = await httpClient.PutAsJsonAsync("todo", item);
-            response.EnsureSuccessStatusCode();
-            await LoadItemsFromServer();
         }
     }
 }
