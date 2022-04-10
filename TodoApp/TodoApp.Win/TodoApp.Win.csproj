@@ -17,6 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\TodoApp.Blazor\Shared\TodoApp.Blazor.Shared.csproj" />
 		<ProjectReference Include="..\TodoApp.EF\TodoApp.EF.csproj" />
 		<ProjectReference Include="..\TodoApp.Model\TodoApp.Model.csproj" />
 	</ItemGroup>

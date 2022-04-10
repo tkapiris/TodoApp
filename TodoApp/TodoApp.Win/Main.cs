@@ -1,5 +1,8 @@
 ﻿using TodoApp.EF.Repository;
 using TodoApp.Model;
+using System.Text.Json;
+using System.Net.Http.Json;
+using TodoApp.Blazor.Shared;
 
 namespace TodoApp.Win;
 
@@ -12,13 +15,19 @@ public partial class Main : Form
 
     public Main(IEntityRepo<Todo> todoRepo, IEntityRepo<TodoComment> todoCommentsRepo)
     {
+
+
         InitializeComponent();
         _todoRepo = todoRepo;
         _todoCommentsRepo = todoCommentsRepo;
     }
 
-    private void Main_Load(object sender, EventArgs e)
+    private async void Main_Load(object sender, EventArgs e)
     {
+        var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri("https://localhost:7213/");
+        var response = await httpClient.GetFromJsonAsync<List<TodoListViewModel> >("todo");
+
         StartLb.Visible = false;
         StartDt.Visible = false;
 
